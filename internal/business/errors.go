@@ -8,4 +8,5 @@ var (
 	ErrInvalidToken       = errors.New("invalid token")
 	ErrDuplicate          = errors.New("duplicate record")
 	ErrNotFound           = errors.New("not found")
+	ErrEmailSend          = errors.New("mail send error")
 )

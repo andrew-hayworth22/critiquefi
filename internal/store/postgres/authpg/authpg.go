@@ -80,6 +80,23 @@ func (uft *userFieldsTaken) toModel() models.UserFieldsTaken {
 	}
 }
 
+// passwordResetTokenRow represents a password reset token row in the database
+type passwordResetTokenRow struct {
+	TokenHash string    `db:"token_hash"`
+	UserID    int64     `db:"user_id"`
+	ExpiresAt time.Time `db:"expires_at"`
+	CreatedAt time.Time `db:"created_at"`
+}
+
+func (prt *passwordResetTokenRow) toModel() models.PasswordResetToken {
+	return models.PasswordResetToken{
+		TokenHash: prt.TokenHash,
+		UserID:    prt.UserID,
+		ExpiresAt: prt.ExpiresAt,
+		CreatedAt: prt.CreatedAt,
+	}
+}
+
 // CreateUser creates a user record and returns the new user's ID
 func (a *AuthPg) CreateUser(ctx context.Context, user models.NewUser) (int64, error) {
 	const q = `
@@ -230,6 +247,21 @@ func (a *AuthPg) SetUserLastLogin(ctx context.Context, id int64) error {
 	return postgres.MapError(err)
 }
 
+// SetUserPassword sets a user's password
+func (a *AuthPg) SetUserPassword(ctx context.Context, userID int64, passwordHash string) error {
+	const q = `
+		UPDATE users
+		SET password_hash = :password_hash
+		WHERE id = :id
+	`
+
+	_, err := a.db.NamedExecContext(ctx, q, map[string]any{
+		"id":            userID,
+		"password_hash": passwordHash,
+	})
+	return postgres.MapError(err)
+}
+
 // CreateRefreshToken creates a new refresh token
 func (a *AuthPg) CreateRefreshToken(ctx context.Context, refreshToken models.RefreshToken) error {
 	const q = `
@@ -238,7 +270,7 @@ func (a *AuthPg) CreateRefreshToken(ctx context.Context, refreshToken models.Ref
 			user_id,
 			user_agent,
 			expires_at
-		) VALUES (:token_hash, :user_id, :user_agent, :expires_at)
+		) VALUES (:token_hash, :user_id, :user_agent, :expires_at);
 	`
 
 	_, err := a.db.NamedExecContext(ctx, q, map[string]any{
@@ -297,4 +329,65 @@ func (a *AuthPg) DeleteRefreshToken(ctx context.Context, tokenHash string) error
 	}
 	defer postgres.CloseRows(rows)
 	return nil
+}
+
+// CreatePasswordResetToken creates a new password reset token
+func (a *AuthPg) CreatePasswordResetToken(ctx context.Context, token models.PasswordResetToken) error {
+	const q = `
+		INSERT INTO password_reset_tokens (
+		    token_hash,
+			user_id,
+			expires_at
+		) VALUES (:token_hash, :user_id, :expires_at);
+	`
+	_, err := a.db.NamedExecContext(ctx, q, map[string]any{
+		"token_hash": token.TokenHash,
+		"user_id":    token.UserID,
+		"expires_at": token.ExpiresAt,
+	})
+	return postgres.MapError(err)
+}
+
+// GetPasswordResetToken fetches a reset password token by its hash
+func (a *AuthPg) GetPasswordResetToken(ctx context.Context, tokenHash string) (models.PasswordResetToken, error) {
+	const q = `
+		SELECT
+			token_hash,
+			user_id,
+			expires_at,
+			created_at
+		FROM password_reset_tokens
+		WHERE token_hash = :token_hash
+	`
+
+	rows, err := a.db.NamedQueryContext(ctx, q, map[string]any{
+		"token_hash": tokenHash,
+	})
+	if err != nil {
+		return models.PasswordResetToken{}, postgres.MapError(err)
+	}
+	defer postgres.CloseRows(rows)
+	if !rows.Next() {
+		return models.PasswordResetToken{}, store.ErrNotFound
+	}
+
+	var row passwordResetTokenRow
+	if err := rows.StructScan(&row); err != nil {
+		return models.PasswordResetToken{}, postgres.MapError(err)
+	}
+	return row.toModel(), nil
+}
+
+// DeletePasswordResetTokensByUserID deletes all reset password tokens for a user
+func (a *AuthPg) DeletePasswordResetTokensByUserID(ctx context.Context, userID int64) error {
+	const q = `
+		DELETE FROM
+			password_reset_tokens
+		WHERE user_id = :user_id
+	`
+
+	_, err := a.db.NamedExecContext(ctx, q, map[string]any{
+		"user_id": userID,
+	})
+	return postgres.MapError(err)
 }

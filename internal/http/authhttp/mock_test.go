@@ -9,10 +9,12 @@ import (
 )
 
 var (
-	Register testutil.Method = "Register"
-	Login    testutil.Method = "Login"
-	Logout   testutil.Method = "Logout"
-	Refresh  testutil.Method = "Refresh"
+	Register       testutil.Method = "Register"
+	Login          testutil.Method = "Login"
+	Logout         testutil.Method = "Logout"
+	Refresh        testutil.Method = "Refresh"
+	ForgotPassword testutil.Method = "ForgotPassword"
+	ResetPassword  testutil.Method = "ResetPassword"
 )
 
 // mockBus is a mock authbus for testing
@@ -42,4 +44,14 @@ func (b *mockBus) Logout(ctx context.Context, refreshToken string) error {
 func (b *mockBus) Refresh(ctx context.Context, refreshToken string) (string, string, error) {
 	call := b.Next(Refresh)
 	return call.Returns[0].(string), call.Returns[1].(string), testutil.ConvertError(call.Returns[2])
+}
+
+func (b *mockBus) ForgotPassword(ctx context.Context, email string) error {
+	call := b.Next(ForgotPassword)
+	return testutil.ConvertError(call.Returns[0])
+}
+
+func (b *mockBus) ResetPassword(ctx context.Context, token, password string) error {
+	call := b.Next(ResetPassword)
+	return testutil.ConvertError(call.Returns[0])
 }

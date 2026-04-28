@@ -13,6 +13,7 @@ import (
 	"github.com/andrew-hayworth22/critiquefi-service/internal/middleware"
 	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/httprate"
 )
 
 type Server struct {
@@ -42,6 +43,7 @@ type Dependencies struct {
 
 func New(config Config, dependencies Dependencies) *Server {
 	r := chi.NewRouter()
+	r.Use(httprate.LimitByRealIP(100, time.Second))
 	r.Use(chiMiddleware.RequestID)
 	r.Use(chiMiddleware.RealIP)
 	r.Use(middleware.RequestLogger(dependencies.Logger))

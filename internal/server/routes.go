@@ -1,17 +1,22 @@
 package server
 
-import "github.com/go-chi/chi/v5"
+import (
+	"time"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/httprate"
+)
 
 // registerRoutes registers all routes for the application
 func registerRoutes(r *chi.Mux, dependencies Dependencies) {
-	r.Group(unauthenticatedRoutes(r, dependencies))
-	r.Group(publicRoutes(r, dependencies))
-	r.Group(protectedRoutes(r, dependencies))
-	r.Group(adminRoutes(r, dependencies))
+	r.Group(unauthenticatedRoutes(dependencies))
+	r.Group(publicRoutes(dependencies))
+	r.Group(protectedRoutes(dependencies))
+	r.Group(adminRoutes(dependencies))
 }
 
 // unauthenticatedRoutes defines routes that will not attempt authentication
-func unauthenticatedRoutes(r chi.Router, dependencies Dependencies) func(chi.Router) {
+func unauthenticatedRoutes(dependencies Dependencies) func(chi.Router) {
 	return func(r chi.Router) {
 		// System Checks
 		r.Get("/liveness", dependencies.SysHandler.Liveness)
@@ -21,18 +26,20 @@ func unauthenticatedRoutes(r chi.Router, dependencies Dependencies) func(chi.Rou
 		r.Post("/auth/register", dependencies.AuthHandler.Register)
 		r.Post("/auth/login", dependencies.AuthHandler.Login)
 		r.Post("/auth/refresh", dependencies.AuthHandler.Refresh)
+		r.With(httprate.LimitByRealIP(1, time.Minute)).Post("/auth/forgot-password", dependencies.AuthHandler.ForgotPassword)
+		r.With(httprate.LimitByRealIP(1, time.Minute)).Post("/auth/reset-password", dependencies.AuthHandler.ResetPassword)
 	}
 }
 
 // publicRoutes defines routes that do not require authentication
-func publicRoutes(r chi.Router, dependencies Dependencies) func(chi.Router) {
+func publicRoutes(dependencies Dependencies) func(chi.Router) {
 	return func(r chi.Router) {
 		r.Use(dependencies.AuthMiddleware.Authenticate)
 	}
 }
 
 // protectedRoutes defines routes that require authentication
-func protectedRoutes(r chi.Router, dependencies Dependencies) func(chi.Router) {
+func protectedRoutes(dependencies Dependencies) func(chi.Router) {
 	return func(r chi.Router) {
 		r.Use(dependencies.AuthMiddleware.Authenticate)
 		r.Use(dependencies.AuthMiddleware.ForceAuthentication)
@@ -47,7 +54,7 @@ func protectedRoutes(r chi.Router, dependencies Dependencies) func(chi.Router) {
 }
 
 // adminRoutes defines routes that
-func adminRoutes(r chi.Router, dependencies Dependencies) func(chi.Router) {
+func adminRoutes(dependencies Dependencies) func(chi.Router) {
 	return func(r chi.Router) {
 		r.Use(dependencies.AuthMiddleware.Authenticate)
 		r.Use(dependencies.AuthMiddleware.ForceAdmin)

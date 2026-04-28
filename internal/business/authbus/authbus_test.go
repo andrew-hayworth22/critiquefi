@@ -19,7 +19,7 @@ func TestBus_Register(t *testing.T) {
 		request              models.NewUserRequest
 		userAgent            string
 		remember             bool
-		storeSetup           func(s *mockStore)
+		mockSetup            func(s *mockStore, m *mockMailer)
 		expectedErr          error
 		accessTokenExpected  bool
 		refreshTokenExpected bool
@@ -35,7 +35,7 @@ func TestBus_Register(t *testing.T) {
 			},
 			userAgent: "test",
 			remember:  false,
-			storeSetup: func(s *mockStore) {
+			mockSetup: func(s *mockStore, m *mockMailer) {
 				s.On(CheckTakenUserFields, models.UserFieldsTaken{}, nil).
 					On(CreateUser, int64(1), nil).
 					On(GetUserByID, models.User{
@@ -47,6 +47,7 @@ func TestBus_Register(t *testing.T) {
 						PasswordHash: "password",
 						IsActive:     true,
 					}, nil)
+				m.On(SendWelcome, nil)
 			},
 			expectedErr:          nil,
 			accessTokenExpected:  true,
@@ -63,7 +64,7 @@ func TestBus_Register(t *testing.T) {
 			},
 			userAgent: "test",
 			remember:  true,
-			storeSetup: func(s *mockStore) {
+			mockSetup: func(s *mockStore, m *mockMailer) {
 				s.On(CheckTakenUserFields, models.UserFieldsTaken{}, nil).
 					On(CreateUser, int64(1), nil).
 					On(GetUserByID, models.User{
@@ -76,6 +77,7 @@ func TestBus_Register(t *testing.T) {
 						IsActive:     true,
 					}, nil).
 					On(CreateRefreshToken, nil)
+				m.On(SendWelcome, nil)
 			},
 			expectedErr:          nil,
 			accessTokenExpected:  true,
@@ -90,9 +92,9 @@ func TestBus_Register(t *testing.T) {
 				Password:        "ssword",
 				ConfirmPassword: "password",
 			},
-			userAgent:  "test",
-			remember:   true,
-			storeSetup: func(s *mockStore) {},
+			userAgent: "test",
+			remember:  true,
+			mockSetup: func(s *mockStore, m *mockMailer) {},
 			expectedErr: models.ValidationErrors{
 				"email":            "invalid email address",
 				"display_name":     "display name must be between 3 and 50 characters long",
@@ -114,7 +116,7 @@ func TestBus_Register(t *testing.T) {
 			},
 			userAgent: "test",
 			remember:  true,
-			storeSetup: func(s *mockStore) {
+			mockSetup: func(s *mockStore, m *mockMailer) {
 				s.On(CheckTakenUserFields, models.UserFieldsTaken{
 					DisplayNameTaken: true,
 					EmailTaken:       true,
@@ -138,7 +140,7 @@ func TestBus_Register(t *testing.T) {
 			},
 			userAgent: "test",
 			remember:  true,
-			storeSetup: func(s *mockStore) {
+			mockSetup: func(s *mockStore, m *mockMailer) {
 				s.On(CheckTakenUserFields, models.UserFieldsTaken{}, nil).
 					On(CreateUser, int64(0), store.ErrDuplicate)
 			},
@@ -152,10 +154,12 @@ func TestBus_Register(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			s := newMockStore(t)
-			tc.storeSetup(s)
+			m := newMockMailer(t)
+			tc.mockSetup(s, m)
 
 			svc := authbus.New(authbus.BusConfig{
 				Store:           s,
+				Mailer:          m,
 				AccessTokenKey:  "key",
 				AccessTokenTTL:  time.Hour,
 				RefreshTokenTTL: time.Hour,
@@ -242,7 +246,7 @@ func TestBus_Login(t *testing.T) {
 			refreshTokenExpected: true,
 		},
 		{
-			name:      "error: wrong email",
+			name:      "error: wrong mail",
 			email:     "nonexistent@critiquefi.com",
 			password:  "password",
 			userAgent: "test",
@@ -513,7 +517,7 @@ func TestBus_ValidateAccessToken(t *testing.T) {
 					t.Errorf("expected is admin to be false, got %v", claims.IsAdmin)
 				}
 				if claims.Email != "user@critiquefi.com" {
-					t.Errorf("expected email user@critiquefi.com, got %v", claims.Email)
+					t.Errorf("expected mail user@critiquefi.com, got %v", claims.Email)
 				}
 			},
 		},
@@ -543,7 +547,7 @@ func TestBus_ValidateAccessToken(t *testing.T) {
 					t.Errorf("expected is admin to be true, got %v", claims.IsAdmin)
 				}
 				if claims.Email != "user@critiquefi.com" {
-					t.Errorf("expected email user@critiquefi.com, got %v", claims.Email)
+					t.Errorf("expected mail user@critiquefi.com, got %v", claims.Email)
 				}
 			},
 		},

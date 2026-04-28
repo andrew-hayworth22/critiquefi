@@ -5,9 +5,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/andrew-hayworth22/critiquefi-service/internal/business"
+	"github.com/andrew-hayworth22/critiquefi-service/internal/mail"
 	"github.com/andrew-hayworth22/critiquefi-service/internal/models"
 	"github.com/andrew-hayworth22/critiquefi-service/internal/store"
 	"github.com/andrew-hayworth22/critiquefi-service/pkg/crypto"
@@ -21,10 +23,21 @@ type Store interface {
 	GetUserByEmail(ctx context.Context, email string) (user models.User, err error)
 	CheckTakenUserFields(ctx context.Context, newUserRequest models.NewUserRequest) (fields models.UserFieldsTaken, err error)
 	SetUserLastLogin(ctx context.Context, id int64) error
+	SetUserPassword(ctx context.Context, id int64, password string) error
 
 	CreateRefreshToken(ctx context.Context, refreshToken models.RefreshToken) (err error)
 	GetRefreshToken(ctx context.Context, tokenHash string) (models.RefreshToken, error)
 	DeleteRefreshToken(ctx context.Context, token string) error
+
+	CreatePasswordResetToken(ctx context.Context, token models.PasswordResetToken) error
+	GetPasswordResetToken(ctx context.Context, tokenHash string) (models.PasswordResetToken, error)
+	DeletePasswordResetTokensByUserID(ctx context.Context, userID int64) error
+}
+
+// Mailer defines the logic needed for sending auth-related emails
+type Mailer interface {
+	SendWelcome(ctx context.Context, recipient mail.Recipient) error
+	SendPasswordReset(ctx context.Context, recipient mail.Recipient, token string) error
 }
 
 // jwtClaims defines the claims to be stored in the JWT
@@ -45,27 +58,36 @@ func (c jwtClaims) toModel() models.Claims {
 
 // Bus defines the auth business logic
 type Bus struct {
-	store           Store
-	accessTokenKey  []byte
-	accessTokenTTL  time.Duration
-	refreshTokenTTL time.Duration
+	logger                *slog.Logger
+	store                 Store
+	mailer                Mailer
+	accessTokenKey        []byte
+	accessTokenTTL        time.Duration
+	refreshTokenTTL       time.Duration
+	passwordResetTokenTTL time.Duration
 }
 
 // BusConfig defines the auth business logic configuration
 type BusConfig struct {
-	Store           Store
-	AccessTokenKey  string
-	AccessTokenTTL  time.Duration
-	RefreshTokenTTL time.Duration
+	Logger                *slog.Logger
+	Store                 Store
+	Mailer                Mailer
+	AccessTokenKey        string
+	AccessTokenTTL        time.Duration
+	RefreshTokenTTL       time.Duration
+	PasswordResetTokenTTL time.Duration
 }
 
 // New creates a new auth business logic package
 func New(cfg BusConfig) *Bus {
 	return &Bus{
-		store:           cfg.Store,
-		accessTokenKey:  []byte(cfg.AccessTokenKey),
-		accessTokenTTL:  cfg.AccessTokenTTL,
-		refreshTokenTTL: cfg.RefreshTokenTTL,
+		logger:                cfg.Logger,
+		store:                 cfg.Store,
+		mailer:                cfg.Mailer,
+		accessTokenKey:        []byte(cfg.AccessTokenKey),
+		accessTokenTTL:        cfg.AccessTokenTTL,
+		refreshTokenTTL:       cfg.RefreshTokenTTL,
+		passwordResetTokenTTL: cfg.PasswordResetTokenTTL,
 	}
 }
 
@@ -133,6 +155,17 @@ func (b *Bus) Register(ctx context.Context, newUserRequest models.NewUserRequest
 	if err != nil {
 		return
 	}
+
+	// Send a welcome email and gracefully handle errors
+	err = b.mailer.SendWelcome(ctx, mail.Recipient{
+		Name:    user.Name,
+		Address: user.Email,
+	})
+	if err != nil {
+		b.logger.Error("failed to send welcome email", "err", err)
+		err = nil
+	}
+
 	return
 }
 
@@ -264,7 +297,7 @@ func (b *Bus) ValidateAccessToken(accessToken string) (models.Claims, error) {
 	return claimsModel, nil
 }
 
-// GenerateRefreshToken generates a refresh token for a user
+// GenerateRefreshToken generates a refresh token for a user and sends an email
 func (b *Bus) GenerateRefreshToken(ctx context.Context, user models.User, userAgent string) (string, error) {
 	refreshToken, err := crypto.RandomString(32)
 	if err != nil {
@@ -286,4 +319,76 @@ func (b *Bus) GenerateRefreshToken(ctx context.Context, user models.User, userAg
 	}
 
 	return refreshToken, nil
+}
+
+// ForgotPassword sends a password reset email to a user
+func (b *Bus) ForgotPassword(ctx context.Context, email string) error {
+	user, err := b.store.GetUserByEmail(ctx, email)
+	if err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			return business.ErrNotFound
+		}
+		return business.ErrInternal
+	}
+
+	if err = b.store.DeletePasswordResetTokensByUserID(ctx, user.ID); err != nil {
+		return business.ErrInternal
+	}
+
+	resetToken, err := crypto.RandomString(32)
+	if err != nil {
+		return err
+	}
+	hashedResetToken := crypto.HashToken(resetToken)
+	fmt.Println("token=" + resetToken + ";hashed=" + hashedResetToken)
+
+	token := models.PasswordResetToken{
+		TokenHash: hashedResetToken,
+		UserID:    user.ID,
+		ExpiresAt: time.Now().Add(b.passwordResetTokenTTL).UTC(),
+		CreatedAt: time.Now().UTC(),
+	}
+
+	if err := b.store.CreatePasswordResetToken(ctx, token); err != nil {
+		return business.ErrInternal
+	}
+
+	if err := b.mailer.SendPasswordReset(ctx, mail.Recipient{
+		Name:    user.Name,
+		Address: user.Email,
+	}, resetToken); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ResetPassword resets a user's password using a password reset token'
+func (b *Bus) ResetPassword(ctx context.Context, token string, newPassword string) error {
+	hashedToken := crypto.HashToken(token)
+	fmt.Println("token=" + token + ";hashed=" + hashedToken)
+	tok, err := b.store.GetPasswordResetToken(ctx, hashedToken)
+	if err != nil {
+		return business.ErrInvalidToken
+	}
+	if time.Now().UTC().After(tok.ExpiresAt) {
+		return business.ErrInvalidToken
+	}
+
+	hashedPassword, err := crypto.HashPassword(newPassword)
+	if err != nil {
+		return business.ErrInternal
+	}
+
+	err = b.store.SetUserPassword(ctx, tok.UserID, hashedPassword)
+	if err != nil {
+		return business.ErrInternal
+	}
+
+	err = b.store.DeletePasswordResetTokensByUserID(ctx, tok.UserID)
+	if err != nil {
+		return business.ErrInternal
+	}
+
+	return nil
 }

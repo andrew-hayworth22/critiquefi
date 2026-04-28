@@ -18,6 +18,8 @@ type Bus interface {
 	Login(ctx context.Context, email, password string, userAgent string, remember bool) (string, string, error)
 	Logout(ctx context.Context, refreshToken string) error
 	Refresh(ctx context.Context, refreshToken string) (string, string, error)
+	ForgotPassword(ctx context.Context, email string) error
+	ResetPassword(ctx context.Context, token string, newPassword string) error
 }
 
 // Handler exposes HTTP endpoints related to authentication
@@ -62,6 +64,17 @@ type LoginRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 	Remember bool   `json:"remember"`
+}
+
+// ForgotPasswordRequest represents a request to reset a user's password
+type ForgotPasswordRequest struct {
+	Email string `json:"email"`
+}
+
+// ResetPasswordRequest represents a request to reset a user's password
+type ResetPasswordRequest struct {
+	Token    string `json:"token"`
+	Password string `json:"password"`
 }
 
 // AuthenticationResponse represents a response to an authentication request
@@ -175,6 +188,41 @@ func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
 	httputil.WriteJSON(w, http.StatusOK, AuthenticationResponse{
 		AccessToken: accessToken,
 	})
+}
+
+// ForgotPassword creates a new password reset token
+func (h *Handler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
+	logger := appcontext.GetLogger(r.Context())
+
+	var req ForgotPasswordRequest
+	if !httputil.DecodeRequest(w, r, &req) {
+		return
+	}
+
+	// Ignore the error, we don't want to communicate to the user if the email is valid or not
+	err := h.bus.ForgotPassword(r.Context(), req.Email)
+	if err != nil {
+		logger.Error("forgot password failed", "error", err)
+	}
+	httputil.WriteNoContent(w)
+}
+
+// ResetPassword resets a user's password
+func (h *Handler) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	var req ResetPasswordRequest
+	if !httputil.DecodeRequest(w, r, &req) {
+		return
+	}
+
+	err := h.bus.ResetPassword(r.Context(), req.Token, req.Password)
+	if err != nil {
+		if errors.Is(err, business.ErrInvalidToken) {
+			httputil.WriteBadRequest(w, "invalid/expired token")
+			return
+		}
+		httputil.WriteInternalError(w)
+	}
+	httputil.WriteNoContent(w)
 }
 
 // setRefreshTokenCookie sets the refresh token cookie

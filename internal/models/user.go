@@ -55,8 +55,6 @@ func (u NewUserRequest) Validate() error {
 	return nil
 }
 
-// NewUserRequest represents the data needed from the transport layer to create a new user
-
 // UserFieldsTaken represents fields that are taken when creating a user
 type UserFieldsTaken struct {
 	EmailTaken       bool

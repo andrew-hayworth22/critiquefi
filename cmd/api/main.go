@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -16,6 +17,10 @@ import (
 	"github.com/andrew-hayworth22/critiquefi-service/internal/http/authhttp"
 	"github.com/andrew-hayworth22/critiquefi-service/internal/http/filmhttp"
 	"github.com/andrew-hayworth22/critiquefi-service/internal/http/syshttp"
+	"github.com/andrew-hayworth22/critiquefi-service/internal/mail"
+	"github.com/andrew-hayworth22/critiquefi-service/internal/mail/authmail"
+	"github.com/andrew-hayworth22/critiquefi-service/internal/mail/senders/logmail"
+	"github.com/andrew-hayworth22/critiquefi-service/internal/mail/senders/ses"
 	"github.com/andrew-hayworth22/critiquefi-service/internal/middleware"
 	"github.com/andrew-hayworth22/critiquefi-service/internal/server"
 	"github.com/andrew-hayworth22/critiquefi-service/internal/store/postgres"
@@ -63,18 +68,40 @@ func main() {
 		return
 	}
 
+	// Build mail sender
+	var sender mail.Sender
+	switch strings.ToLower(cfg.EmailProvider) {
+	case "ses":
+		sender, err = ses.New(ctx, ses.Config{
+			Region:      "",
+			FromAddress: "",
+			FromName:    "",
+		})
+	case "logmail":
+		sender = logmail.New(logger)
+	default:
+		logger.Error("invalid email provider", "provider", cfg.EmailProvider)
+		return
+	}
+
 	// Build storage packages
 	sysStore := syspg.New(db)
 	authStore := authpg.New(db)
 	filmStore := filmpg.New(db)
 
+	// Build mail packages
+	authMailer := authmail.New(sender, cfg.BaseURL)
+
 	// Build business logic packages
 	sysBus := sysbus.New(sysStore)
 	authBus := authbus.New(authbus.BusConfig{
-		Store:           authStore,
-		AccessTokenKey:  cfg.JWTSecret,
-		AccessTokenTTL:  cfg.AccessTokenTTL,
-		RefreshTokenTTL: cfg.RefreshTokenTTL,
+		Logger:                logger,
+		Store:                 authStore,
+		Mailer:                authMailer,
+		AccessTokenKey:        cfg.JWTSecret,
+		AccessTokenTTL:        cfg.AccessTokenTTL,
+		RefreshTokenTTL:       cfg.RefreshTokenTTL,
+		PasswordResetTokenTTL: cfg.PasswordResetTokenTTL,
 	})
 	filmBus := filmbus.New(filmStore)
 

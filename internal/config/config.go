@@ -31,26 +31,34 @@ type Config struct {
 	JWTSecret                string        `env:"JWT_SECRET,required"`
 	AccessTokenTTL           time.Duration `env:"ACCESS_TOKEN_TTL" envDefault:"15m"`
 	RefreshTokenTTL          time.Duration `env:"REFRESH_TOKEN_TTL" envDefault:"720h"`
+	PasswordResetTokenTTL    time.Duration `env:"PASSWORD_RESET_TOKEN_TTL" envDefault:"15m"`
 	RefreshTokenCookieName   string        `env:"REFRESH_TOKEN_COOKIE_NAME" envDefault:"rt"`
 	RefreshTokenCookieDomain string        `env:"REFRESH_TOKEN_COOKIE_DOMAIN" envDefault:"localhost"`
 	CORSOrigins              []string      `env:"CORS_ORIGINS" envDefault:"http://localhost:8080"`
+	EmailProvider            string        `env:"EMAIL_PROVIDER" envDefault:"logmail"`
+	AWSAccessKeyID           string        `env:"AWS_ACCESS_KEY_ID" envDefault:""`
+	AWSSecretAccessKey       string        `env:"AWS_SECRET_ACCESS_KEY" envDefault:""`
+	AWSRegion                string        `env:"AWS_REGION" envDefault:"us-east-1"`
+	FromAddress              string        `env:"FROM_ADDRESS" envDefault:"noreply@localhost"`
+	FromName                 string        `env:"FROM_NAME" envDefault:"critiquefi"`
+	BaseURL                  string        `env:"BASE_URL" envDefault:"http://localhost:8080"`
 }
 
 // Load gets the configuration values from the application environment
-func Load() (Config, error) {
+func Load() (*Config, error) {
 	_ = godotenv.Load()
 
 	var cfg Config
 	err := env.Parse(&cfg)
 	if err != nil {
-		return Config{}, fmt.Errorf("error parsing config: %w", err)
+		return nil, fmt.Errorf("error parsing config: %w", err)
 	}
 
-	return cfg, nil
+	return &cfg, nil
 }
 
-// SlogLevel converts the log level config string to a slog.Level
-func (c Config) SlogLevel() slog.Level {
+// SlogLevel converts the logmail level config string to a slog.Level
+func (c *Config) SlogLevel() slog.Level {
 	switch strings.ToLower(c.LogLevel) {
 	case "debug":
 		return slog.LevelDebug
@@ -64,7 +72,7 @@ func (c Config) SlogLevel() slog.Level {
 }
 
 // NewLogger creates a new logger for the application
-func (c Config) NewLogger() *slog.Logger {
+func (c *Config) NewLogger() *slog.Logger {
 	level := c.SlogLevel()
 
 	var handler slog.Handler
