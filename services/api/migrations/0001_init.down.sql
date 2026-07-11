@@ -1,0 +1,33 @@
+DROP TRIGGER IF EXISTS set_updated_at ON songs;
+DROP TRIGGER IF EXISTS set_updated_at ON albums;
+DROP TRIGGER IF EXISTS set_updated_at ON episodes;
+DROP TRIGGER IF EXISTS set_updated_at ON seasons;
+DROP TRIGGER IF EXISTS set_updated_at ON shows;
+DROP TRIGGER IF EXISTS set_updated_at ON dlc;
+DROP TRIGGER IF EXISTS set_updated_at ON games;
+DROP TRIGGER IF EXISTS set_updated_at ON books;
+DROP TRIGGER IF EXISTS set_updated_at ON films;
+DROP TRIGGER IF EXISTS set_updated_at ON users;
+
+DROP TABLE IF EXISTS refresh_tokens;
+DROP TABLE IF EXISTS diary_entry;
+DROP TABLE IF EXISTS user_media;
+DROP TABLE IF EXISTS songs;
+DROP TABLE IF EXISTS albums;
+DROP TABLE IF EXISTS episodes;
+DROP TABLE IF EXISTS seasons;
+DROP TABLE IF EXISTS shows;
+DROP TABLE IF EXISTS dlc;
+DROP TABLE IF EXISTS games;
+DROP TABLE IF EXISTS books;
+DROP TABLE IF EXISTS films;
+DROP TABLE IF EXISTS users;
+
+DROP TYPE IF EXISTS music_type;
+DROP TYPE IF EXISTS show_type;
+DROP TYPE IF EXISTS game_type;
+DROP TYPE IF EXISTS book_type;
+DROP TYPE IF EXISTS film_type;
+DROP TYPE IF EXISTS media_type;
+
+DROP EXTENSION IF EXISTS citext;
