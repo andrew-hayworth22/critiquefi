@@ -8,11 +8,11 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/andrew-hayworth22/critiquefi-service/internal/business"
-	"github.com/andrew-hayworth22/critiquefi-service/internal/mail"
-	"github.com/andrew-hayworth22/critiquefi-service/internal/models"
-	"github.com/andrew-hayworth22/critiquefi-service/internal/store"
-	"github.com/andrew-hayworth22/critiquefi-service/pkg/crypto"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/business"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/mail"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/models"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/store"
+	"github.com/andrew-hayworth22/critiquefi/services/api/pkg/crypto"
 	"github.com/golang-jwt/jwt/v5"
 )
 

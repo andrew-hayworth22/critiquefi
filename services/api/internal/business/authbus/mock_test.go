@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/andrew-hayworth22/critiquefi-service/internal/mail"
-	"github.com/andrew-hayworth22/critiquefi-service/internal/models"
-	"github.com/andrew-hayworth22/critiquefi-service/internal/testutil"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/mail"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/models"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/testutil"
 )
 
 var (

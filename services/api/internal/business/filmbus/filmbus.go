@@ -5,9 +5,9 @@ import (
 	"context"
 	"errors"
 
-	"github.com/andrew-hayworth22/critiquefi-service/internal/business"
-	"github.com/andrew-hayworth22/critiquefi-service/internal/models"
-	"github.com/andrew-hayworth22/critiquefi-service/internal/store"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/business"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/models"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/store"
 )
 
 // Store defines the storage logic for films.

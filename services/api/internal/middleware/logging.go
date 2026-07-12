@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/andrew-hayworth22/critiquefi-service/internal/appcontext"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/appcontext"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 )
 

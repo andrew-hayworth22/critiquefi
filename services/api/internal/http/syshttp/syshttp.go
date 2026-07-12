@@ -5,7 +5,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/andrew-hayworth22/critiquefi-service/pkg/httputil"
+	"github.com/andrew-hayworth22/critiquefi/services/api/pkg/httputil"
 )
 
 // Bus defines the business logic needed for system checks

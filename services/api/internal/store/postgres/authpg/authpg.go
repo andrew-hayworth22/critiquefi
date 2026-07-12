@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/andrew-hayworth22/critiquefi-service/internal/models"
-	"github.com/andrew-hayworth22/critiquefi-service/internal/store"
-	"github.com/andrew-hayworth22/critiquefi-service/internal/store/postgres"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/models"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/store"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/store/postgres"
 	"github.com/jmoiron/sqlx"
 )
 

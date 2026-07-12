@@ -6,7 +6,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/andrew-hayworth22/critiquefi-service/internal/models"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/models"
 )
 
 // CheckErr compares the actual error to the expected error.

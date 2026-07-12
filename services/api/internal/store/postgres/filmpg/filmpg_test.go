@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/andrew-hayworth22/critiquefi-service/internal/models"
-	"github.com/andrew-hayworth22/critiquefi-service/internal/store/postgres/filmpg"
-	"github.com/andrew-hayworth22/critiquefi-service/internal/testutil"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/models"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/store/postgres/filmpg"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/testutil"
 )
 
 func TestFilmPg_CreateFilm(t *testing.T) {

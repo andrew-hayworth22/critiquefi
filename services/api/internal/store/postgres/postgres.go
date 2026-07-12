@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/andrew-hayworth22/critiquefi-service/internal/store"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/store"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib"

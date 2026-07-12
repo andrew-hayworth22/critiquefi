@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/andrew-hayworth22/critiquefi-service/internal/store/postgres"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/store/postgres"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/jmoiron/sqlx"
 	"github.com/testcontainers/testcontainers-go"

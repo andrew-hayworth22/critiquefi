@@ -6,10 +6,10 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/andrew-hayworth22/critiquefi-service/internal/appcontext"
-	"github.com/andrew-hayworth22/critiquefi-service/internal/business"
-	"github.com/andrew-hayworth22/critiquefi-service/internal/models"
-	"github.com/andrew-hayworth22/critiquefi-service/pkg/httputil"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/appcontext"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/business"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/models"
+	"github.com/andrew-hayworth22/critiquefi/services/api/pkg/httputil"
 )
 
 // Bus defines the business logic needed for auth handlers

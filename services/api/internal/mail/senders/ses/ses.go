@@ -5,7 +5,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/andrew-hayworth22/critiquefi-service/internal/mail"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/mail"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"

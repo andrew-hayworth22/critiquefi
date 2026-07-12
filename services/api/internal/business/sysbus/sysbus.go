@@ -4,7 +4,7 @@ package sysbus
 import (
 	"context"
 
-	"github.com/andrew-hayworth22/critiquefi-service/internal/business"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/business"
 )
 
 // Store defines logic for system-related storage operations.

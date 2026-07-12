@@ -5,7 +5,7 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/andrew-hayworth22/critiquefi-service/internal/models"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/models"
 )
 
 // contextKey is a value for use with context.WithValue

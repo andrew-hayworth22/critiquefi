@@ -5,8 +5,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/andrew-hayworth22/critiquefi-service/internal/mail"
-	"github.com/andrew-hayworth22/critiquefi-service/internal/mail/htmlrender"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/mail"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/mail/htmlrender"
 )
 
 // AuthMail sends mail related to auth

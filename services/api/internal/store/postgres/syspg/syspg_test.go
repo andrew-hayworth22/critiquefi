@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/andrew-hayworth22/critiquefi-service/internal/store/postgres/syspg"
-	"github.com/andrew-hayworth22/critiquefi-service/internal/testutil"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/store/postgres/syspg"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/testutil"
 )
 
 func TestSysPg_Ping(t *testing.T) {

@@ -5,12 +5,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/andrew-hayworth22/critiquefi-service/internal/business"
-	"github.com/andrew-hayworth22/critiquefi-service/internal/business/authbus"
-	"github.com/andrew-hayworth22/critiquefi-service/internal/models"
-	"github.com/andrew-hayworth22/critiquefi-service/internal/store"
-	"github.com/andrew-hayworth22/critiquefi-service/internal/testutil"
-	"github.com/andrew-hayworth22/critiquefi-service/pkg/crypto"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/business"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/business/authbus"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/models"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/store"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/testutil"
+	"github.com/andrew-hayworth22/critiquefi/services/api/pkg/crypto"
 )
 
 func TestBus_Register(t *testing.T) {

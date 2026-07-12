@@ -3,7 +3,7 @@ package syspg
 import (
 	"context"
 
-	"github.com/andrew-hayworth22/critiquefi-service/internal/store"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/store"
 	"github.com/jmoiron/sqlx"
 )
 

@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/andrew-hayworth22/critiquefi-service/internal/testutil"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/testutil"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jmoiron/sqlx"

@@ -5,9 +5,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/andrew-hayworth22/critiquefi-service/internal/business"
-	"github.com/andrew-hayworth22/critiquefi-service/internal/http/syshttp"
-	"github.com/andrew-hayworth22/critiquefi-service/internal/testutil"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/business"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/http/syshttp"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/testutil"
 )
 
 func TestHandler_Liveness(t *testing.T) {

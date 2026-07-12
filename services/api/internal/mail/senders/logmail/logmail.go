@@ -5,7 +5,7 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/andrew-hayworth22/critiquefi-service/internal/mail"
+	"github.com/andrew-hayworth22/critiquefi/services/api/internal/mail"
 )
 
 type Sender struct {

@@ -1,4 +1,4 @@
-module github.com/andrew-hayworth22/critiquefi-service
+module github.com/andrew-hayworth22/critiquefi/services/api
 
 go 1.26.2
 
