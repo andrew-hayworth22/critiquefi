@@ -47,11 +47,11 @@ jobs:
     - name: Build
       run: pnpm --filter web build
 
-    - name: Unit test
-      run: pnpm --filter web test:unit -- --run
-
     - name: Install Playwright browsers
       run: pnpm --filter web exec playwright install --with-deps
+
+    - name: Unit test
+      run: pnpm --filter web test:unit -- --run
 
     - name: E2E test
       run: pnpm --filter web test:e2e
