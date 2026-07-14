@@ -1,0 +1,61 @@
+name: Release
+
+# Builds api/web images and pushes them to GHCR on every push to main.
+# Staging (Coolify on the Pi) tracks these images directly.
+# Production images are NOT built here — see promote.yml, which copies
+# an already-built GHCR image into ECR by digest when a version tag is pushed.
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-push-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push api image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./services/api
+          push: true
+          build-args: |
+            VERSION=0.0.1
+            COMMIT=${{ github.sha }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/critiquefi-api:latest
+            ghcr.io/${{ github.repository_owner }}/critiquefi-api:sha-${{ github.sha }}
+
+  build-push-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push web image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/critiquefi-web:latest
+            ghcr.io/${{ github.repository_owner }}/critiquefi-web:sha-${{ github.sha }}

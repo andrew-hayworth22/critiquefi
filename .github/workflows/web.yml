@@ -1,0 +1,57 @@
+name: Web
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "apps/web/**"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "package.json"
+      - ".github/workflows/web.yml"
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - "apps/web/**"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "package.json"
+      - ".github/workflows/web.yml"
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '24'
+
+    - name: Enable corepack
+      run: corepack enable
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Lint
+      run: pnpm --filter web lint
+
+    - name: Check
+      run: pnpm --filter web check
+
+    - name: Build
+      run: pnpm --filter web build
+
+    - name: Unit test
+      run: pnpm --filter web test:unit -- --run
+
+    - name: Install Playwright browsers
+      run: pnpm --filter web exec playwright install --with-deps
+
+    - name: E2E test
+      run: pnpm --filter web test:e2e

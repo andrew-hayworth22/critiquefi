@@ -1,5 +1,6 @@
 # Build source code
 FROM golang:1.26.2-alpine AS builder
+
 WORKDIR /src
 
 RUN apk add --no-cache git ca-certificates
@@ -14,17 +15,24 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 COPY . .
 
 RUN --mount=type=cache,target=/go/pkg/mod \
-    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    CGO_ENABLED=0 GOOS=linux \
     go build -ldflags="-s -w -X main.version=${VERSION} -X main.commit=${COMMIT}" \
     -o /out/api ./cmd/api
 
+RUN --mount=type=cache,target=/go/pkg/mod \
+    CGO_ENABLED=0 GOOS=linux \
+    go build -ldflags="-s -w" \
+    -o /out/migrate ./cmd/migrate
+
 FROM alpine:latest AS runtime
+LABEL org.opencontainers.image.source=https://github.com/andrew-hayworth22/critiquefi
 
 RUN apk add --no-cache ca-certificates tzdata
 RUN addgroup -S app && adduser -S app -G app
 
 WORKDIR /app
 COPY --from=builder /out/api /app/api
+COPY --from=builder /out/migrate /app/migrate
 COPY /migrations /app/migrations
 
 ENV PORT=8080
@@ -34,3 +42,4 @@ HEALTHCHECK --interval=30s --timeout=3s --retries=3 CMD wget -qO- "http://127.0.
 
 USER app
 ENTRYPOINT ["/app/api"]
+

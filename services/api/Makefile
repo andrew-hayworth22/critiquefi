@@ -1,9 +1,17 @@
-build:
-	docker build \
+build-local:
+	docker buildx build \
 	  --build-arg VERSION=1.0.0 \
 	  --build-arg COMMIT=$(git rev-parse --short HEAD) \
-	  -t critiquefi-service:latest \
-	  -t critiquefi-service:1.0.0 .
+	  -t critiquefi-api:latest \
+	  -t critiquefi-api:1.0.0 .
+
+build-push-dev:
+	docker buildx build --platform linux/arm64 \
+		--build-arg VERSION=1.0.0 \
+		--build-arg COMMIT=$(git rev-parse --short HEAD) \
+		-t ghcr.io/andrew-hayworth22/critiquefi-api:latest \
+		-t ghcr.io/andrew-hayworth22/critiquefi-api:0.0.1 \
+		--push .
 
 run:
 	docker stop critiquefi-service && docker rm critiquefi-service && docker run -d --env-file .env -p 8080:8080 --name critiquefi-service critiquefi-service

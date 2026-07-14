@@ -1,0 +1,60 @@
+services:
+  api:
+    image: ${API_IMAGE:-critiquefi-api:local}
+    build:
+      context: ./services/api/
+    environment:
+      ENV: ${ENV:-local}
+      PORT: ${PORT:-8080}
+      DB_URL: ${DB_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      ACCESS_TOKEN_TTL: ${ACCESS_TOKEN_TTL:-15m}
+      REFRESH_TOKEN_TTL: ${REFRESH_TOKEN_TTL:-720h}
+      REFRESH_TOKEN_COOKIE_DOMAIN: ${REFRESH_TOKEN_COOKIE_DOMAIN:-localhost}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-logmail}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      FROM_ADDRESS: ${FROM_ADDRESS:-noreply@localhost}
+      BASE_URL: ${BASE_URL:-http://localhost:8080}
+    ports:
+      - "${PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false
+
+  web:
+    image: ${WEB_IMAGE:-critiquefi-web:local}
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    environment:
+      ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:18-alpine
+    profiles: ["local"]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-critiquefi}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-critiquefi}
+      POSTGRES_DB: ${POSTGRES_DB:-critiquefi}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-critiquefi}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pg-data:

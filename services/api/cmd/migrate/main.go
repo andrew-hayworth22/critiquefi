@@ -24,9 +24,7 @@ func main() {
 	}
 
 	// Load environment
-	if err := godotenv.Load(); err != nil {
-		log.Fatalf("error loading .env file: %v", err)
-	}
+	_ = godotenv.Load()
 
 	dbURL := os.Getenv("MIGRATE_DB_URL")
 

@@ -1,0 +1,74 @@
+name: Promote to production
+
+# Copies the already-built GHCR image for this commit into ECR by digest —
+# no rebuild — so production runs the exact artifact that ran on staging.
+# Triggered by pushing a version tag, e.g. `git tag v1.4.0 && git push origin v1.4.0`.
+#
+# One-time setup required before this can run:
+#   1. Create ECR repos in us-east-1: critiquefi-api, critiquefi-web
+#   2. Create an IAM role trusting token.actions.githubusercontent.com, scoped to
+#      this repo, with permission to push to those ECR repos.
+#   3. Set repo variables: AWS_ACCOUNT_ID, AWS_ECR_ROLE_NAME (the role from step 2).
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: read
+  packages: read
+  id-token: write
+
+jobs:
+  promote-api:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/${{ vars.AWS_ECR_ROLE_NAME }}
+          aws-region: us-east-1
+
+      - name: Log in to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Copy image from GHCR to ECR
+        run: |
+          docker buildx imagetools create \
+            --tag ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/critiquefi-api:${{ github.ref_name }} \
+            --tag ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/critiquefi-api:latest \
+            ghcr.io/${{ github.repository_owner }}/critiquefi-api:sha-${{ github.sha }}
+
+  promote-web:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/${{ vars.AWS_ECR_ROLE_NAME }}
+          aws-region: us-east-1
+
+      - name: Log in to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Copy image from GHCR to ECR
+        run: |
+          docker buildx imagetools create \
+            --tag ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/critiquefi-web:${{ github.ref_name }} \
+            --tag ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/critiquefi-web:latest \
+            ghcr.io/${{ github.repository_owner }}/critiquefi-web:sha-${{ github.sha }}
