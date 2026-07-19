@@ -37,7 +37,7 @@ jobs:
       - name: Lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: 2.12.2
+          version: v2.12.2
           working-directory: services/api
 
       - name: Test
