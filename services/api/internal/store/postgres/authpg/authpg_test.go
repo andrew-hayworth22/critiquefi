@@ -74,7 +74,6 @@ func TestAuthStore_CreateUser(t *testing.T) {
 			})
 		}
 	})
-
 }
 
 func TestAuthStore_GetUserById(t *testing.T) {
@@ -469,7 +468,9 @@ func TestAuthStore_SetUserLastLogin(t *testing.T) {
 					if err != nil {
 						t.Errorf("expected no error, got: %v", err)
 					}
-					defer row.Close()
+					defer func() {
+						_ = row.Close()
+					}()
 					if !row.Next() {
 						t.Error("expected row, got nothing")
 					}

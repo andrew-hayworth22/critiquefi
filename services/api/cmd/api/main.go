@@ -77,6 +77,9 @@ func main() {
 			FromAddress: "",
 			FromName:    "",
 		})
+		if err != nil {
+			logger.Error("failed to create SES email provied", "error", err)
+		}
 	case "logmail":
 		sender = logmail.New(logger)
 	default:
