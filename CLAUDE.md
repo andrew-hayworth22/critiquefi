@@ -19,9 +19,13 @@ The `postgres` service is scoped to the `local` Compose profile specifically so 
 ## Images and releases
 
 - `api`/`web` build from source locally; staging/prod pull prebuilt images via `API_IMAGE`/`WEB_IMAGE` env vars in `docker-compose.yaml`.
-- `.github/workflows/release.yml` builds and pushes to GHCR (`ghcr.io/andrew-hayworth22/critiquefi-{api,web}`) on every push to `main` — staging tracks these directly.
-- `.github/workflows/promote.yml` copies an existing GHCR image digest into ECR on a `vX.Y.Z` tag push — production never builds independently, only promotes what already ran on staging.
+- Each service owns its own workflow — `.github/workflows/api.yml` and `.github/workflows/web.yml` — rather than a shared release workflow. Both are path-filtered (`services/api/**` / web-relevant paths) and run on `pull_request` and `push` to `main`:
+  - A `test` (api) / `build` (web) job runs lint + tests on every PR and push, and is required — it gates the image build.
+  - `web.yml` also has an `e2e` job (Playwright) that is advisory only (`continue-on-error: true`) — it reports but never blocks the pipeline.
+  - A `build-push` job runs only on `push` (`if: github.event_name == 'push'`), after tests pass, and pushes to GHCR (`ghcr.io/andrew-hayworth22/critiquefi-{api,web}`) tagged `latest` and `sha-<commit>` — staging tracks these directly.
+- `.github/workflows/promote.yml` copies an existing GHCR image digest into ECR on a `vX.Y.Z` tag push — production never builds independently, only promotes what already ran on staging. The tag must point at the commit currently verified on staging, not just the tip of `main`.
 - Migrations run automatically on `api` boot (`cmd/api/main.go` calls `migrate.Up()`) — there's no separate migration step in any environment.
+- **Known gap**: nothing in this repo triggers Coolify to actually redeploy when a new `latest` image lands in GHCR/ECR — that's external Coolify configuration (registry polling or a webhook), not tracked here. Confirm how it's wired before assuming a merge to `main` alone rolls out to staging.
 
 ## Working in this repo
 

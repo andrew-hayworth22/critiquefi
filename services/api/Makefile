@@ -13,11 +13,6 @@ build-push-dev:
 		-t ghcr.io/andrew-hayworth22/critiquefi-api:0.0.1 \
 		--push .
 
-run:
-	docker stop critiquefi-service && docker rm critiquefi-service && docker run -d --env-file .env -p 8080:8080 --name critiquefi-service critiquefi-service
-
-build-run: build run
-
 genkey:
 	go run ./cmd/genkey/main.go
 

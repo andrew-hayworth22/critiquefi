@@ -36,8 +36,7 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      api:
-        condition: service_healthy
+      - api
 
   postgres:
     image: postgres:18-alpine

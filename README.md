@@ -69,10 +69,12 @@ Each service reads its configuration from environment variables (see `docker-com
 
 Locally, `api` and `web` build from source (`build:` in `docker-compose.yaml`). Staging and production instead pull prebuilt images via the `API_IMAGE` / `WEB_IMAGE` environment variables (Coolify sets these per-environment; they default to a local tag when unset):
 
-- **Staging** pulls from GitHub Container Registry — `ghcr.io/andrew-hayworth22/critiquefi-{api,web}`. `.github/workflows/release.yml` builds and pushes these on every push to `main`, tagged `latest` and `sha-<commit>`.
+- **Staging** pulls from GitHub Container Registry — `ghcr.io/andrew-hayworth22/critiquefi-{api,web}`. Each service has its own workflow, `.github/workflows/api.yml` and `.github/workflows/web.yml`, path-filtered to that service's files. Both build+push to GHCR (tagged `latest` and `sha-<commit>`) only on push to `main`, and only after that service's own lint/test job passes. The same workflows also run their test/lint job (and, for web, an advisory Playwright suite) on every PR into `main` as required checks — pushing/building an image never happens on a PR, only on `main`.
 - **Production** pulls from AWS ECR, to avoid egress/data-transfer costs pulling into EC2 from outside AWS. Production images are never built independently — `.github/workflows/promote.yml` copies the exact GHCR image digest for a commit into ECR (via `docker buildx imagetools create`) when a version tag (`vX.Y.Z`) is pushed. This guarantees production runs the identical artifact that was already running on staging, not a fresh rebuild.
 
-To ship a production release: confirm the commit is healthy on staging, then `git tag vX.Y.Z && git push origin vX.Y.Z`. `promote.yml` requires one-time setup — see the comment header in that workflow file for the ECR repos and IAM role it expects.
+To ship a production release: confirm the commit is healthy on staging, then `git tag vX.Y.Z && git push origin vX.Y.Z` — the tag must point at the exact commit currently verified on staging, not just whatever's newest on `main`. `promote.yml` requires one-time setup — see the comment header in that workflow file for the ECR repos and IAM role it expects.
+
+**Note**: neither GHCR nor ECR receiving a new image automatically means Coolify redeploys it — how Coolify on the Pi/EC2 notices and rolls out a new `latest` image (registry polling vs. a webhook) is configured in Coolify itself, not in this repo.
 
 ## Roadmap
 
