@@ -1,3 +1,5 @@
+@source "./**/*.{svelte,ts}";
+
 @theme {
 	--color-film: oklch(0.7 0.16 25);
 	--color-show: oklch(0.7 0.16 245);
