@@ -1,0 +1,10 @@
+@theme {
+	--color-film: oklch(0.7 0.16 25);
+	--color-show: oklch(0.7 0.16 245);
+	--color-season: oklch(0.7 0.16 245);
+	--color-episode: oklch(0.7 0.16 245);
+	--color-book: oklch(0.7 0.16 155);
+	--color-game: oklch(0.7 0.16 75);
+	--color-album: oklch(0.7 0.16 320);
+	--color-song: oklch(0.7 0.16 320);
+}
