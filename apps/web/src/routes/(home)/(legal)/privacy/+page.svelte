@@ -7,7 +7,8 @@
 		{
 			hue: 155,
 			title: 'we never sell your data',
-			description: 'not to advertisers, not to data brokers. your ratings power your recs - nothing else.'
+			description:
+				'not to advertisers, not to data brokers. your ratings power your recs - nothing else.'
 		},
 		{
 			hue: 245,
@@ -17,7 +18,8 @@
 		{
 			hue: 320,
 			title: 'export or delete anytime',
-			description: "download everything you've logged, or wipe your account for good, from settings."
+			description:
+				"download everything you've logged, or wipe your account for good, from settings."
 		}
 	];
 
@@ -72,7 +74,7 @@
 	</div>
 
 	<div class="mt-12">
-        <ShortVersion highlights={highlights} />
+		<ShortVersion {highlights} />
 		<div class="mt-11 grid grid-cols-[220px_minmax(0,1fr)] items-start gap-12 pb-5">
 			<Nav {navItems} />
 
@@ -141,7 +143,8 @@
 					</h2>
 					<p class="m-0 mb-4 text-[15.5px] leading-[1.65] text-[#c9c6c0] text-pretty">
 						you can access, correct, export, or delete your data at any time - most of it directly
-						from settings. depending on where you live, you may have additional rights under laws like gdpr or ccpa, which we honor for all users.
+						from settings. depending on where you live, you may have additional rights under laws
+						like gdpr or ccpa, which we honor for all users.
 					</p>
 					<div class="flex flex-wrap gap-2">
 						{#each rightsChips as chip (chip)}
